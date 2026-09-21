@@ -1,0 +1,7 @@
+# Real audit output must never be committed: snapshots and reports contain tenant data.
+agentid-snapshot-*.json
+agentid-findings-*.csv
+agentid-report-*.html
+audit/
+*.local.json
+agent-audit/

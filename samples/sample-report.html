@@ -1,0 +1,298 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent identity audit - Contoso (sample data) - 2026-09-18</title>
+<style>:root {
+  --bg: #f6f6f3; --panel: #ffffff; --text: #1d1d1f; --muted: #5d6166; --line: #e2e2dd; --accent: #2b5d8a;
+  --crit: #a1261d; --crit-bg: #fbe8e5; --high: #b54708; --high-bg: #fdf0e3; --med: #8a6100; --med-bg: #fbf3d6;
+  --low: #2b5d8a; --low-bg: #e7eff7; --info: #5d6166; --info-bg: #ededea; --ok: #2e7d4f; --ok-bg: #e5f3ea;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141517; --panel: #1d1e21; --text: #e9e9e6; --muted: #a3a5aa; --line: #34363a; --accent: #8cb8e0;
+    --crit: #f2a097; --crit-bg: #3d1c19; --high: #f3b27a; --high-bg: #3b2615; --med: #e6c66e; --med-bg: #362d12;
+    --low: #9cc1e4; --low-bg: #1b2a38; --info: #b7b9bd; --info-bg: #2a2b2e; --ok: #8fd1a8; --ok-bg: #1a3325;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 48px; }
+header h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--muted); }
+h2 { font-size: 19px; margin: 40px 0 12px; }
+h3 { font-size: 16px; margin: 24px 0 10px; }
+a { color: var(--accent); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 24px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.tile b { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+.tile span { color: var(--muted); font-size: 13px; }
+.tile.sev-Critical b { color: var(--crit); } .tile.sev-High b { color: var(--high); } .tile.sev-Medium b { color: var(--med); }
+.tile.sev-Low b { color: var(--low); } .tile.sev-Info b { color: var(--info); }
+.callout { background: var(--med-bg); border: 1px solid var(--line); border-left: 4px solid var(--med); border-radius: 8px; padding: 12px 16px; margin-top: 20px; }
+.callout p { margin: 0 0 6px; }
+.callout ul { margin: 0; padding-left: 20px; }
+.finding { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+.finding .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.finding .title { font-weight: 600; }
+.finding .rule { color: var(--muted); font-size: 12px; font-family: ui-monospace, Consolas, monospace; }
+.finding .object { color: var(--muted); font-size: 13px; margin-top: 2px; overflow-wrap: anywhere; }
+.finding p { margin: 8px 0 0; overflow-wrap: anywhere; }
+.finding .fix { color: var(--muted); }
+.chip { display: inline-block; border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.chip.Critical { color: var(--crit); background: var(--crit-bg); } .chip.High { color: var(--high); background: var(--high-bg); }
+.chip.Medium { color: var(--med); background: var(--med-bg); } .chip.Low { color: var(--low); background: var(--low-bg); }
+.chip.Info { color: var(--info); background: var(--info-bg); } .chip.Ok { color: var(--ok); background: var(--ok-bg); }
+.chip.Partial { color: var(--med); background: var(--med-bg); }
+.chip.Denied, .chip.Error, .chip.NotSupported, .chip.Skipped, .chip.NotCollected { color: var(--crit); background: var(--crit-bg); }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.date { white-space: nowrap; }
+.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--muted); }
+.unknown { color: var(--muted); font-style: italic; }
+.empty { color: var(--muted); padding: 12px 16px; margin: 0; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+footer p { margin: 2px 0; }
+@media print { body { background: #fff; } .finding, .scroll, .tile { break-inside: avoid; } }</style></head><body><div class="wrap">
+<header><h1>Agent identity audit</h1>
+<p>Contoso (sample data) &middot; <span class="mono">tenant-1</span></p>
+<p>Collected 2026-09-18 22:33 UTC &middot; evaluated as of 2026-09-18 &middot; AgentIdAudit 0.1.0-preview &middot; Graph beta</p></header>
+<div class="tiles">
+<div class="tile"><b>3</b><span>Blueprints</span></div>
+<div class="tile"><b>4</b><span>Agent identities</span></div>
+<div class="tile"><b>2</b><span>Agent users</span></div>
+<div class="tile sev-Critical"><b>2</b><span>Critical</span></div>
+<div class="tile sev-High"><b>6</b><span>High</span></div>
+<div class="tile sev-Medium"><b>12</b><span>Medium</span></div>
+<div class="tile sev-Low"><b>4</b><span>Low</span></div>
+<div class="tile sev-Info"><b>2</b><span>Info</span></div>
+</div>
+<h2>Findings</h2>
+<h3><span class="chip Critical">Critical</span> 2 finding(s)</h3>
+<div class="finding"><div class="head">
+<span class="title">Agent holds a permission Microsoft blocks for agents</span><span class="rule">AID-PERM-001</span></div>
+<div class="object">Agent identity: <strong>Sales Agent</strong> <span class="mono">a1</span></div>
+<p>Holds Directory.ReadWrite.All (Microsoft Graph).</p>
+<p class="fix">Remove the grant, then establish how it was made: Microsoft blocks these permissions for agents, so the grant predates the block or was made through a path the block does not cover. <a href="https://learn.microsoft.com/en-us/graph/api/resources/agentid-platform-overview?view=graph-rest-beta#microsoft-graph-permissions-blocked-for-agents" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent holds a directory role</span><span class="rule">AID-PERM-005</span></div>
+<div class="object">Agent identity: <strong>Sales Agent</strong> <span class="mono">a1</span></div>
+<p>Directory roles: Global Administrator (privileged, tenant-wide).</p>
+<p class="fix">Remove directory roles from agents. Where an agent must administer something, use the narrowest role available, scope it to an administrative unit, and make the assignment time-bound. <a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/privileged-roles-permissions" rel="noopener noreferrer">Reference</a></p></div>
+<h3><span class="chip High">High</span> 6 finding(s)</h3>
+<div class="finding"><div class="head">
+<span class="title">Blueprint authenticates with a client secret</span><span class="rule">AID-CRED-001</span></div>
+<div class="object">Blueprint: <strong>Sales Blueprint</strong> <span class="mono">bp1</span></div>
+<p>1 active client secret(s). A blueprint credential is a master key: anyone holding a copy of the secret can request tokens for the 1 agent identity created from this blueprint, and any created later.</p>
+<p class="fix">Replace the secret with a federated identity credential (for example, a managed identity) or a certificate kept in a key vault, then remove the secret. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/create-blueprint?tabs=microsoft-graph-api#configure-credentials-for-the-agent-identity-blueprint" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Microsoft has disabled this object</span><span class="rule">AID-GOV-007</span></div>
+<div class="object">Agent identity: <strong>&lt;script&gt;alert(1)&lt;/script&gt; Orphan Agent</strong> <span class="mono">a4</span></div>
+<p>disabledByMicrosoftStatus is DisabledDueToViolationOfServicesAgreement.</p>
+<p class="fix">Investigate the agent&#39;s behavior before taking any other action. Microsoft sets this status for violations of its service agreement, which can include suspicious or malicious activity. <a href="https://learn.microsoft.com/en-us/graph/api/resources/agentidentityblueprint?view=graph-rest-beta" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Identity Protection flags this agent as risky</span><span class="rule">AID-LIFE-003</span></div>
+<div class="object">Agent identity: <strong>Sales Agent</strong> <span class="mono">a1</span></div>
+<p>Risk state atRisk, risk level high, last updated 2026-09-01. Detail: none.</p>
+<p class="fix">Investigate the risk detections for this agent. Disable it while investigating if the risk is confirmed, then confirm or dismiss the risk so policies respond correctly. <a href="https://learn.microsoft.com/en-us/graph/api/resources/riskyagent?view=graph-rest-beta" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent holds a sensitive application permission</span><span class="rule">AID-PERM-002</span></div>
+<div class="object">Agent identity: <strong>Old Agent</strong> <span class="mono">a3</span></div>
+<p>Application permissions Sites.FullControl.All (Office 365 SharePoint Online). These apply across the whole tenant, with no user present.</p>
+<p class="fix">Replace tenant-wide application permissions with delegated access (on behalf of a user), or scope the access down (for example, an Exchange application access policy or SharePoint Sites.Selected). <a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-application-permissions" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent holds a sensitive application permission</span><span class="rule">AID-PERM-002</span></div>
+<div class="object">Blueprint principal: <strong>Sales Blueprint</strong> <span class="mono">bpp1</span></div>
+<p>Application permissions Mail.Send (Microsoft Graph). These apply across the whole tenant, with no user present. Access granted to a blueprint principal can be inherited by the 1 agent identity created from this blueprint, and any created later.</p>
+<p class="fix">Replace tenant-wide application permissions with delegated access (on behalf of a user), or scope the access down (for example, an Exchange application access policy or SharePoint Sites.Selected). <a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-application-permissions" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Blueprint lets agents inherit broad delegated permissions</span><span class="rule">AID-PERM-004</span></div>
+<div class="object">Blueprint: <strong>Sales Blueprint</strong> <span class="mono">bp1</span></div>
+<p>Inherits all delegated permissions of Microsoft Graph that the blueprint is granted, without further consent, for the 1 agent identity created from this blueprint, and any created later.</p>
+<p class="fix">List the specific scopes agents need (enumerated) instead of allowing all of them, and keep sensitive scopes off the inheritable list. <a href="https://learn.microsoft.com/en-us/graph/api/resources/inheritablepermission?view=graph-rest-beta" rel="noopener noreferrer">Reference</a></p></div>
+<h3><span class="chip Medium">Medium</span> 12 finding(s)</h3>
+<div class="finding"><div class="head">
+<span class="title">Long-lived blueprint credential</span><span class="rule">AID-CRED-002</span></div>
+<div class="object">Blueprint: <strong>Sales Blueprint</strong> <span class="mono">bp1</span></div>
+<p>Credential lifetime exceeds 180 days: &#39;my-secret&#39; (secret), valid for 100,075 days until 2299-12-31; &#39;CN=sales&#39; (certificate), valid for 183 days until 2026-12-01.</p>
+<p class="fix">Issue credentials with a lifetime that matches your rotation policy, or move to a federated identity credential, which has no expiry to manage. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/create-blueprint?tabs=microsoft-graph-api#configure-credentials-for-the-agent-identity-blueprint" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent identity has its own credentials</span><span class="rule">AID-CRED-005</span></div>
+<div class="object">Agent identity: <strong>Old Agent</strong> <span class="mono">a3</span></div>
+<p>1 active credential(s) on the agent identity itself: &#39;agent-secret&#39; (secret). This is a way to act as the agent that bypasses its blueprint.</p>
+<p class="fix">Confirm why the agent identity carries its own credential. Agents normally obtain tokens through their blueprint; remove credentials that are not required. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/create-blueprint?tabs=microsoft-graph-api#configure-credentials-for-the-agent-identity-blueprint" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent identity has no sponsor</span><span class="rule">AID-GOV-001</span></div>
+<div class="object">Agent identity: <strong>Sales Agent</strong> <span class="mono">a1</span></div>
+<p>No sponsor is assigned, so no person is accountable for this agent. A sponsor is required when an agent identity is created, so the original sponsor was most likely removed or deleted.</p>
+<p class="fix">Assign a sponsor: a person accountable for the agent&#39;s access and lifecycle. If no one will take that on, disable the agent. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-owners-sponsors-managers" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Sponsor account is disabled</span><span class="rule">AID-GOV-002</span></div>
+<div class="object">Agent identity: <strong>Old Agent</strong> <span class="mono">a3</span></div>
+<p>Disabled sponsor(s): Bob Leaver &lt;bob@contoso.example&gt;. No active sponsor remains.</p>
+<p class="fix">Transfer sponsorship to an active person, for example the former sponsor&#39;s manager. Lifecycle workflows can automate this when people leave. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-owners-sponsors-managers" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Blueprint has no sponsor</span><span class="rule">AID-GOV-003</span></div>
+<div class="object">Blueprint: <strong>Sales Blueprint</strong> <span class="mono">bp1</span></div>
+<p>No sponsor is assigned. No person is accountable for the 1 agent identity created from this blueprint, and any created later.</p>
+<p class="fix">Assign a sponsor to the blueprint: the person accountable for every agent created from it. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-owners-sponsors-managers" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent identity&#39;s blueprint is not in this tenant</span><span class="rule">AID-GOV-004</span></div>
+<div class="object">Agent identity: <strong>&lt;script&gt;alert(1)&lt;/script&gt; Orphan Agent</strong> <span class="mono">a4</span></div>
+<p>References blueprint appId gone-app, but no blueprint principal with that appId exists in this tenant. The agent is likely orphaned.</p>
+<p class="fix">Establish whether the agent is still in use. If its blueprint was removed deliberately, delete the agent identity as well. <a href="https://learn.microsoft.com/en-us/graph/api/resources/agentidentityblueprint?view=graph-rest-beta" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent identity has not signed in recently</span><span class="rule">AID-LIFE-001</span></div>
+<div class="object">Agent identity: <strong>Old Agent</strong> <span class="mono">a3</span></div>
+<p>No sign-in in the last 90 days (no sign-in recorded). Enabled: False.</p>
+<p class="fix">Confirm with the sponsor whether the agent is still needed. Disable or delete unused agents; their permissions remain usable for as long as they exist. <a href="https://learn.microsoft.com/en-us/entra/id-governance/agent-id-governance-overview" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent identity has not signed in recently</span><span class="rule">AID-LIFE-001</span></div>
+<div class="object">Agent identity: <strong>Sales Agent</strong> <span class="mono">a1</span></div>
+<p>No sign-in in the last 90 days (last sign-in 2026-03-01). Enabled: True.</p>
+<p class="fix">Confirm with the sponsor whether the agent is still needed. Disable or delete unused agents; their permissions remain usable for as long as they exist. <a href="https://learn.microsoft.com/en-us/entra/id-governance/agent-id-governance-overview" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Sensitive delegated permission consented for all users</span><span class="rule">AID-PERM-003</span></div>
+<div class="object">Agent identity: <strong>Sales Agent</strong> <span class="mono">a1</span></div>
+<p>Delegated permissions Mail.Read (Microsoft Graph), consented for all users. The agent can use them on behalf of any user, without that user being asked.</p>
+<p class="fix">Confirm the agent needs these permissions for every user. Where it does not, replace the tenant-wide (AllPrincipals) grant with per-user consent or narrower scopes. <a href="https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-application-permissions" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent holds a directory role</span><span class="rule">AID-PERM-005</span></div>
+<div class="object">Agent user: <strong>Ghost Agent User</strong> <span class="mono">u2</span></div>
+<p>Directory roles: Reports Reader (tenant-wide).</p>
+<p class="fix">Remove directory roles from agents. Where an agent must administer something, use the narrowest role available, scope it to an administrative unit, and make the assignment time-bound. <a href="https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/privileged-roles-permissions" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent user has no sponsor</span><span class="rule">AID-USER-001</span></div>
+<div class="object">Agent user: <strong>Sales Agent User</strong> <span class="mono">u1</span></div>
+<p>No sponsor is assigned to agent user salesagent@contoso.example.</p>
+<p class="fix">Assign a sponsor to the agent user, or remove the agent user if it is no longer needed. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/agent-owners-sponsors-managers" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Agent user&#39;s parent agent identity not found</span><span class="rule">AID-USER-002</span></div>
+<div class="object">Agent user: <strong>Ghost Agent User</strong> <span class="mono">u2</span></div>
+<p>identityParentId missing-agent does not match any agent identity in this tenant; the agent user is likely orphaned. Enabled: True.</p>
+<p class="fix">Establish whether the agent user is still in use. An agent user whose agent identity is gone should be disabled and removed. <a href="https://learn.microsoft.com/en-us/graph/api/resources/agentuser?view=graph-rest-beta" rel="noopener noreferrer">Reference</a></p></div>
+<h3><span class="chip Low">Low</span> 4 finding(s)</h3>
+<div class="finding"><div class="head">
+<span class="title">Expired credentials still attached to blueprint</span><span class="rule">AID-CRED-003</span></div>
+<div class="object">Blueprint: <strong>Sales Blueprint</strong> <span class="mono">bp1</span></div>
+<p>1 expired credential(s): &#39;old-secret&#39; (secret), expired 2025-06-01.</p>
+<p class="fix">Remove expired credentials so the credential list shows only what is actually in use. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/create-blueprint?tabs=microsoft-graph-api#configure-credentials-for-the-agent-identity-blueprint" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Blueprint has multiple active credentials</span><span class="rule">AID-CRED-004</span></div>
+<div class="object">Blueprint: <strong>Sales Blueprint</strong> <span class="mono">bp1</span></div>
+<p>2 active credentials (1 secret(s), 1 certificate(s)). Each one is an independent way to act as the 1 agent identity created from this blueprint, and any created later.</p>
+<p class="fix">Keep one active credential, plus a second only during a planned rotation. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/create-blueprint?tabs=microsoft-graph-api#configure-credentials-for-the-agent-identity-blueprint" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Other applications can create agents from this blueprint</span><span class="rule">AID-GOV-005</span></div>
+<div class="object">Blueprint: <strong>Sales Blueprint</strong> <span class="mono">bp1</span></div>
+<p>1 manager application(s) can create agent identities from this blueprint: mgr-app-1.</p>
+<p class="fix">Confirm each manager application is expected. A manager application can create agent identities and agent users from the blueprint, so treat it as privileged. <a href="https://learn.microsoft.com/en-us/graph/api/resources/agentidentityblueprint?view=graph-rest-beta" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Disabled agent identity still holds permissions</span><span class="rule">AID-LIFE-002</span></div>
+<div class="object">Agent identity: <strong>Old Agent</strong> <span class="mono">a3</span></div>
+<p>Disabled, but still holds 1 direct permission(s): Sites.FullControl.All (Office 365 SharePoint Online).</p>
+<p class="fix">Remove permissions from agents being retired. Re-enabling a disabled agent restores all of its access at once. <a href="https://learn.microsoft.com/en-us/entra/id-governance/agent-id-governance-overview" rel="noopener noreferrer">Reference</a></p></div>
+<h3><span class="chip Info">Info</span> 2 finding(s)</h3>
+<div class="finding"><div class="head">
+<span class="title">Blueprint credentials expire soon</span><span class="rule">AID-CRED-006</span></div>
+<div class="object">Blueprint: <strong>Expiring Blueprint</strong> <span class="mono">bp3</span></div>
+<p>Every credential expires by 2026-10-01. After that, any agent identity created from this blueprint (none exist yet) can no longer get tokens.</p>
+<p class="fix">Add a replacement credential before the current ones expire, or switch to a federated identity credential. <a href="https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/create-blueprint?tabs=microsoft-graph-api#configure-credentials-for-the-agent-identity-blueprint" rel="noopener noreferrer">Reference</a></p></div>
+<div class="finding"><div class="head">
+<span class="title">Blueprint is available to other tenants</span><span class="rule">AID-GOV-006</span></div>
+<div class="object">Blueprint: <strong>Sales Blueprint</strong> <span class="mono">bp1</span></div>
+<p>signInAudience is AzureADMultipleOrgs, so the blueprint can be added to other tenants.</p>
+<p class="fix">If agents from this blueprint are only meant for this organization, set signInAudience to AzureADMyOrg. <a href="https://learn.microsoft.com/en-us/graph/api/resources/agentidentityblueprint?view=graph-rest-beta" rel="noopener noreferrer">Reference</a></p></div>
+<h2>Blueprints</h2>
+<div class="scroll"><table><thead><tr>
+<th>Blueprint</th>
+<th>Agents</th>
+<th>Active secrets</th>
+<th>Active certificates</th>
+<th>Federated credentials</th>
+<th>Sponsors</th>
+<th>Inheritable scopes</th>
+<th>Audience</th>
+</tr></thead><tbody>
+<tr><td><strong>Sales Blueprint</strong><br><span class="mono">bp1-app</span></td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td>Microsoft Graph: all scopes</td><td>AzureADMultipleOrgs</td></tr>
+<tr><td><strong>HR Blueprint</strong><br><span class="mono">bp2-app</span></td><td class="num">2</td><td class="num">0</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td>Microsoft Graph: User.Read</td><td>AzureADMyOrg</td></tr>
+<tr><td><strong>Expiring Blueprint</strong><br><span class="mono">bp3-app</span></td><td class="num">0</td><td class="num">0</td><td class="num">1</td><td class="num">0</td><td class="num">1</td><td>none</td><td>AzureADMyOrg</td></tr>
+</tbody></table></div>
+<h2>Agent identities</h2>
+<div class="scroll"><table><thead><tr>
+<th>Agent identity</th>
+<th>Blueprint</th>
+<th>Enabled</th>
+<th>Created</th>
+<th>Sponsors</th>
+<th>Direct permissions</th>
+<th>Inherited permissions</th>
+<th>Last sign-in</th>
+<th>Risk</th>
+</tr></thead><tbody>
+<tr><td><strong>Sales Agent</strong><br><span class="mono">a1</span></td><td>Sales Blueprint</td><td>True</td><td class="date">2026-01-10</td><td class="num">0</td><td class="num">3</td><td class="num">1</td><td class="date">2026-03-01</td><td>high / atRisk</td></tr>
+<tr><td><strong>HR Agent</strong><br><span class="mono">a2</span></td><td>HR Blueprint</td><td>True</td><td class="date">2026-02-01</td><td class="num">1</td><td class="num">2</td><td class="num">0</td><td class="date">2026-09-10</td><td>none / dismissed</td></tr>
+<tr><td><strong>Old Agent</strong><br><span class="mono">a3</span></td><td>HR Blueprint</td><td>False</td><td class="date">2025-01-01</td><td class="num">1</td><td class="num">1</td><td class="num">0</td><td class="date">none recorded</td><td>none</td></tr>
+<tr><td><strong>&lt;script&gt;alert(1)&lt;/script&gt; Orphan Agent</strong><br><span class="mono">a4</span></td><td>gone-app</td><td>True</td><td class="date">2026-08-01</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="date">2026-09-15</td><td>none</td></tr>
+</tbody></table></div>
+<h2>Agent users</h2>
+<div class="scroll"><table><thead><tr>
+<th>Agent user</th>
+<th>Enabled</th>
+<th>Parent agent identity</th>
+<th>Sponsors</th>
+</tr></thead><tbody>
+<tr><td><strong>Sales Agent User</strong><br><span class="mono">salesagent@contoso.example</span></td><td>True</td><td>Sales Agent</td><td class="num">0</td></tr>
+<tr><td><strong>Ghost Agent User</strong><br><span class="mono">ghost@contoso.example</span></td><td>True</td><td><span class="mono">missing-agent</span></td><td class="num">1</td></tr>
+</tbody></table></div>
+<h2>Effective access</h2>
+<div class="scroll"><table><thead><tr>
+<th>Principal</th>
+<th>Type</th>
+<th>Resource</th>
+<th>Permission</th>
+<th>Consent</th>
+<th>Source</th>
+</tr></thead><tbody>
+<tr><td><strong>HR Agent</strong><br><span class="mono">Agent identity</span></td><td>Application</td><td>Microsoft Graph</td><td>(default access) </td><td>n/a</td><td>Direct</td></tr>
+<tr><td><strong>HR Agent</strong><br><span class="mono">Agent identity</span></td><td>Delegated</td><td>Microsoft Graph</td><td>User.Read </td><td>One user</td><td>Direct</td></tr>
+<tr><td><strong>Old Agent</strong><br><span class="mono">Agent identity</span></td><td>Application</td><td>Office 365 SharePoint Online</td><td>Sites.FullControl.All <span class="chip High">Sensitive</span></td><td>n/a</td><td>Direct</td></tr>
+<tr><td><strong>Sales Agent</strong><br><span class="mono">Agent identity</span></td><td>Application</td><td>Microsoft Graph</td><td>Directory.ReadWrite.All <span class="chip Critical">Blocked for agents</span></td><td>n/a</td><td>Direct</td></tr>
+<tr><td><strong>Sales Agent</strong><br><span class="mono">Agent identity</span></td><td>Application</td><td>Microsoft Graph</td><td>Mail.Send <span class="chip High">Sensitive</span></td><td>n/a</td><td>Inherited</td></tr>
+<tr><td><strong>Sales Agent</strong><br><span class="mono">Agent identity</span></td><td>Delegated</td><td>Microsoft Graph</td><td>Mail.Read <span class="chip High">Sensitive</span></td><td>All users</td><td>Direct</td></tr>
+<tr><td><strong>Sales Agent</strong><br><span class="mono">Agent identity</span></td><td>Delegated</td><td>Microsoft Graph</td><td>User.Read </td><td>All users</td><td>Direct</td></tr>
+<tr><td><strong>Sales Blueprint</strong><br><span class="mono">Blueprint principal</span></td><td>Application</td><td>Microsoft Graph</td><td>Mail.Send <span class="chip High">Sensitive</span></td><td>n/a</td><td>Direct</td></tr>
+</tbody></table></div>
+<h2 id="coverage">Collection coverage</h2>
+<div class="scroll"><table><thead><tr>
+<th>Data</th>
+<th>Status</th>
+<th>Calls succeeded</th>
+<th>Calls failed</th>
+<th>Detail</th>
+</tr></thead><tbody>
+<tr><td>Tenant</td><td><span class="chip Ok">Ok</span></td><td class="num">1</td><td class="num">0</td><td></td></tr>
+<tr><td>Blueprints</td><td><span class="chip Ok">Ok</span></td><td class="num">1</td><td class="num">0</td><td></td></tr>
+<tr><td>BlueprintFederatedCredentials</td><td><span class="chip Ok">Ok</span></td><td class="num">3</td><td class="num">0</td><td></td></tr>
+<tr><td>BlueprintInheritablePermissions</td><td><span class="chip Ok">Ok</span></td><td class="num">3</td><td class="num">0</td><td></td></tr>
+<tr><td>BlueprintSponsors</td><td><span class="chip Ok">Ok</span></td><td class="num">3</td><td class="num">0</td><td></td></tr>
+<tr><td>BlueprintOwners</td><td><span class="chip Ok">Ok</span></td><td class="num">3</td><td class="num">0</td><td></td></tr>
+<tr><td>BlueprintPrincipals</td><td><span class="chip Ok">Ok</span></td><td class="num">1</td><td class="num">0</td><td></td></tr>
+<tr><td>BlueprintPrincipalGrants</td><td><span class="chip Ok">Ok</span></td><td class="num">6</td><td class="num">0</td><td></td></tr>
+<tr><td>AgentIdentities</td><td><span class="chip Ok">Ok</span></td><td class="num">1</td><td class="num">0</td><td></td></tr>
+<tr><td>AgentSponsors</td><td><span class="chip Ok">Ok</span></td><td class="num">4</td><td class="num">0</td><td></td></tr>
+<tr><td>AgentOwners</td><td><span class="chip Ok">Ok</span></td><td class="num">4</td><td class="num">0</td><td></td></tr>
+<tr><td>AgentGrants</td><td><span class="chip Ok">Ok</span></td><td class="num">8</td><td class="num">0</td><td></td></tr>
+<tr><td>AgentInheritedGrants</td><td><span class="chip Ok">Ok</span></td><td class="num">8</td><td class="num">0</td><td></td></tr>
+<tr><td>AgentUsers</td><td><span class="chip Ok">Ok</span></td><td class="num">1</td><td class="num">0</td><td></td></tr>
+<tr><td>AgentUserSponsors</td><td><span class="chip Ok">Ok</span></td><td class="num">2</td><td class="num">0</td><td></td></tr>
+<tr><td>DirectoryRoles</td><td><span class="chip Ok">Ok</span></td><td class="num">1</td><td class="num">0</td><td></td></tr>
+<tr><td>Resources</td><td><span class="chip Ok">Ok</span></td><td class="num">2</td><td class="num">0</td><td></td></tr>
+<tr><td>SignInActivity</td><td><span class="chip Ok">Ok</span></td><td class="num">4</td><td class="num">0</td><td></td></tr>
+<tr><td>RiskyAgents</td><td><span class="chip Ok">Ok</span></td><td class="num">1</td><td class="num">0</td><td></td></tr>
+</tbody></table></div>
+<footer>
+<p>Generated by <a href="https://github.com/mrochon/AgentIdAudit" rel="noopener noreferrer">AgentIdAudit 0.1.0-preview</a>. Collection is read-only; no secret values, certificate contents or tokens are collected.</p>
+</footer></div></body></html>
+

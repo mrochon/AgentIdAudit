@@ -1,0 +1,641 @@
+{
+  "SchemaVersion": 1,
+  "Tool": "AgentIdAudit",
+  "ToolVersion": "0.1.0-preview",
+  "GraphVersion": "beta",
+  "TenantId": "tenant-1",
+  "TenantName": "Contoso (sample data)",
+  "CollectedAt": "2026-09-18T22:33:17.0084243Z",
+  "Coverage": {
+    "Tenant": {
+      "Status": "Ok",
+      "Succeeded": 1,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "Blueprints": {
+      "Status": "Ok",
+      "Succeeded": 1,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "BlueprintFederatedCredentials": {
+      "Status": "Ok",
+      "Succeeded": 3,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "BlueprintInheritablePermissions": {
+      "Status": "Ok",
+      "Succeeded": 3,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "BlueprintSponsors": {
+      "Status": "Ok",
+      "Succeeded": 3,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "BlueprintOwners": {
+      "Status": "Ok",
+      "Succeeded": 3,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "BlueprintPrincipals": {
+      "Status": "Ok",
+      "Succeeded": 1,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "BlueprintPrincipalGrants": {
+      "Status": "Ok",
+      "Succeeded": 6,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "AgentIdentities": {
+      "Status": "Ok",
+      "Succeeded": 1,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "AgentSponsors": {
+      "Status": "Ok",
+      "Succeeded": 4,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "AgentOwners": {
+      "Status": "Ok",
+      "Succeeded": 4,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "AgentGrants": {
+      "Status": "Ok",
+      "Succeeded": 8,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "AgentInheritedGrants": {
+      "Status": "Ok",
+      "Succeeded": 8,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "AgentUsers": {
+      "Status": "Ok",
+      "Succeeded": 1,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "AgentUserSponsors": {
+      "Status": "Ok",
+      "Succeeded": 2,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "DirectoryRoles": {
+      "Status": "Ok",
+      "Succeeded": 1,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "Resources": {
+      "Status": "Ok",
+      "Succeeded": 2,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "SignInActivity": {
+      "Status": "Ok",
+      "Succeeded": 4,
+      "Failed": 0,
+      "Detail": ""
+    },
+    "RiskyAgents": {
+      "Status": "Ok",
+      "Succeeded": 1,
+      "Failed": 0,
+      "Detail": ""
+    }
+  },
+  "Blueprints": [
+    {
+      "id": "bp1",
+      "appId": "bp1-app",
+      "displayName": "Sales Blueprint",
+      "createdDateTime": "2026-01-01T00:00:00Z",
+      "signInAudience": "AzureADMultipleOrgs",
+      "disabledByMicrosoftStatus": null,
+      "identifierUris": [
+        "api://bp1"
+      ],
+      "tags": [],
+      "managerApplications": [
+        "mgr-app-1"
+      ],
+      "passwordCredentials": [
+        {
+          "keyId": "k-secret-1",
+          "kind": "Secret",
+          "displayName": "my-secret",
+          "type": null,
+          "usage": null,
+          "startDateTime": "2026-01-01T00:00:00Z",
+          "endDateTime": "2299-12-31T23:59:59Z"
+        },
+        {
+          "keyId": "k-secret-old",
+          "kind": "Secret",
+          "displayName": "old-secret",
+          "type": null,
+          "usage": null,
+          "startDateTime": "2025-01-01T00:00:00Z",
+          "endDateTime": "2025-06-01T00:00:00Z"
+        }
+      ],
+      "keyCredentials": [
+        {
+          "keyId": "k-cert-1",
+          "kind": "Certificate",
+          "displayName": "CN=sales",
+          "type": "AsymmetricX509Cert",
+          "usage": "Verify",
+          "startDateTime": "2026-06-01T00:00:00Z",
+          "endDateTime": "2026-12-01T00:00:00Z"
+        }
+      ],
+      "federatedIdentityCredentials": [],
+      "inheritablePermissions": [
+        {
+          "resourceAppId": "00000003-0000-0000-c000-000000000000",
+          "kind": "allAllowed",
+          "scopes": []
+        }
+      ],
+      "sponsors": [],
+      "owners": [
+        {
+          "id": "user-alice",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Alice Admin",
+          "userPrincipalName": "alice@contoso.example",
+          "accountEnabled": true
+        }
+      ]
+    },
+    {
+      "id": "bp2",
+      "appId": "bp2-app",
+      "displayName": "HR Blueprint",
+      "createdDateTime": "2026-02-01T00:00:00Z",
+      "signInAudience": "AzureADMyOrg",
+      "disabledByMicrosoftStatus": null,
+      "identifierUris": [
+        "api://bp2"
+      ],
+      "tags": [],
+      "managerApplications": [],
+      "passwordCredentials": [],
+      "keyCredentials": [
+        {
+          "keyId": "k-cert-2",
+          "kind": "Certificate",
+          "displayName": "CN=hr",
+          "type": "AsymmetricX509Cert",
+          "usage": "Verify",
+          "startDateTime": "2026-06-01T00:00:00Z",
+          "endDateTime": "2026-11-01T00:00:00Z"
+        }
+      ],
+      "federatedIdentityCredentials": [
+        {
+          "id": "fic-1",
+          "name": "hr-mi",
+          "issuer": "https://login.microsoftonline.com/tenant-1/v2.0",
+          "subject": "mi-object-id",
+          "audiences": [
+            "api://AzureADTokenExchange"
+          ]
+        }
+      ],
+      "inheritablePermissions": [
+        {
+          "resourceAppId": "00000003-0000-0000-c000-000000000000",
+          "kind": "enumerated",
+          "scopes": [
+            "User.Read"
+          ]
+        }
+      ],
+      "sponsors": [
+        {
+          "id": "user-alice",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Alice Admin",
+          "userPrincipalName": "alice@contoso.example",
+          "accountEnabled": true
+        }
+      ],
+      "owners": [
+        {
+          "id": "user-alice",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Alice Admin",
+          "userPrincipalName": "alice@contoso.example",
+          "accountEnabled": true
+        }
+      ]
+    },
+    {
+      "id": "bp3",
+      "appId": "bp3-app",
+      "displayName": "Expiring Blueprint",
+      "createdDateTime": "2026-05-01T00:00:00Z",
+      "signInAudience": "AzureADMyOrg",
+      "disabledByMicrosoftStatus": null,
+      "identifierUris": [],
+      "tags": [],
+      "managerApplications": [],
+      "passwordCredentials": [],
+      "keyCredentials": [
+        {
+          "keyId": "k-cert-3",
+          "kind": "Certificate",
+          "displayName": "CN=exp",
+          "type": "AsymmetricX509Cert",
+          "usage": "Verify",
+          "startDateTime": "2026-05-01T00:00:00Z",
+          "endDateTime": "2026-10-01T00:00:00Z"
+        }
+      ],
+      "federatedIdentityCredentials": [],
+      "inheritablePermissions": [],
+      "sponsors": [
+        {
+          "id": "user-alice",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Alice Admin",
+          "userPrincipalName": "alice@contoso.example",
+          "accountEnabled": true
+        }
+      ],
+      "owners": [
+        {
+          "id": "user-alice",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Alice Admin",
+          "userPrincipalName": "alice@contoso.example",
+          "accountEnabled": true
+        }
+      ]
+    }
+  ],
+  "BlueprintPrincipals": [
+    {
+      "id": "bpp1",
+      "appId": "bp1-app",
+      "displayName": "Sales Blueprint",
+      "accountEnabled": true,
+      "createdDateTime": "2026-01-01T00:00:00Z",
+      "appRoleAssignments": [
+        {
+          "id": "ara-bpp1",
+          "principalId": "bpp1",
+          "principalType": "ServicePrincipal",
+          "principalDisplayName": null,
+          "resourceId": "sp-graph",
+          "resourceDisplayName": "Microsoft Graph",
+          "appRoleId": "r-mailsend",
+          "createdDateTime": "2026-01-02T00:00:00Z"
+        }
+      ],
+      "oauth2PermissionGrants": []
+    },
+    {
+      "id": "bpp2",
+      "appId": "bp2-app",
+      "displayName": "HR Blueprint",
+      "accountEnabled": true,
+      "createdDateTime": "2026-02-01T00:00:00Z",
+      "appRoleAssignments": [],
+      "oauth2PermissionGrants": []
+    },
+    {
+      "id": "bpp3",
+      "appId": "bp3-app",
+      "displayName": "Expiring Blueprint",
+      "accountEnabled": true,
+      "createdDateTime": "2026-05-01T00:00:00Z",
+      "appRoleAssignments": [],
+      "oauth2PermissionGrants": []
+    }
+  ],
+  "AgentIdentities": [
+    {
+      "id": "a1",
+      "appId": "a1-app",
+      "displayName": "Sales Agent",
+      "agentIdentityBlueprintId": "bp1-app",
+      "accountEnabled": true,
+      "createdDateTime": "2026-01-10T00:00:00Z",
+      "createdByAppId": "bp1-app",
+      "disabledByMicrosoftStatus": null,
+      "servicePrincipalType": "ServiceIdentity",
+      "tags": [],
+      "passwordCredentials": [],
+      "keyCredentials": [],
+      "sponsors": [],
+      "owners": [],
+      "appRoleAssignments": [
+        {
+          "id": "ara-a1",
+          "principalId": "a1",
+          "principalType": "ServicePrincipal",
+          "principalDisplayName": null,
+          "resourceId": "sp-graph",
+          "resourceDisplayName": "Microsoft Graph",
+          "appRoleId": "r-dirrw",
+          "createdDateTime": null
+        }
+      ],
+      "oauth2PermissionGrants": [
+        {
+          "id": "g-a1",
+          "clientId": "a1",
+          "consentType": "AllPrincipals",
+          "principalId": null,
+          "resourceId": "sp-graph",
+          "scope": "Mail.Read User.Read"
+        }
+      ],
+      "inheritedAppRoleAssignments": [
+        {
+          "id": "ara-bpp1",
+          "principalId": "bpp1",
+          "principalType": "ServicePrincipal",
+          "principalDisplayName": null,
+          "resourceId": "sp-graph",
+          "resourceDisplayName": "Microsoft Graph",
+          "appRoleId": "r-mailsend",
+          "createdDateTime": "2026-01-02T00:00:00Z"
+        }
+      ],
+      "inheritedOauth2PermissionGrants": []
+    },
+    {
+      "id": "a2",
+      "appId": "a2-app",
+      "displayName": "HR Agent",
+      "agentIdentityBlueprintId": "bp2-app",
+      "accountEnabled": true,
+      "createdDateTime": "2026-02-01T00:00:00Z",
+      "createdByAppId": null,
+      "disabledByMicrosoftStatus": null,
+      "servicePrincipalType": "ServiceIdentity",
+      "tags": [],
+      "passwordCredentials": [],
+      "keyCredentials": [],
+      "sponsors": [
+        {
+          "id": "user-alice",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Alice Admin",
+          "userPrincipalName": "alice@contoso.example",
+          "accountEnabled": true
+        }
+      ],
+      "owners": [],
+      "appRoleAssignments": [
+        {
+          "id": "ara-a2",
+          "principalId": "a2",
+          "principalType": null,
+          "principalDisplayName": null,
+          "resourceId": "sp-graph",
+          "resourceDisplayName": null,
+          "appRoleId": "00000000-0000-0000-0000-000000000000",
+          "createdDateTime": null
+        }
+      ],
+      "oauth2PermissionGrants": [
+        {
+          "id": "g-a2",
+          "clientId": "a2",
+          "consentType": "Principal",
+          "principalId": "user-alice",
+          "resourceId": "sp-graph",
+          "scope": "User.Read"
+        }
+      ],
+      "inheritedAppRoleAssignments": [],
+      "inheritedOauth2PermissionGrants": []
+    },
+    {
+      "id": "a3",
+      "appId": "a3-app",
+      "displayName": "Old Agent",
+      "agentIdentityBlueprintId": "bp2-app",
+      "accountEnabled": false,
+      "createdDateTime": "2025-01-01T00:00:00Z",
+      "createdByAppId": null,
+      "disabledByMicrosoftStatus": null,
+      "servicePrincipalType": "ServiceIdentity",
+      "tags": [],
+      "passwordCredentials": [
+        {
+          "keyId": "k-agent-secret",
+          "kind": "Secret",
+          "displayName": "agent-secret",
+          "type": null,
+          "usage": null,
+          "startDateTime": "2026-01-01T00:00:00Z",
+          "endDateTime": "2026-12-01T00:00:00Z"
+        }
+      ],
+      "keyCredentials": [],
+      "sponsors": [
+        {
+          "id": "user-bob",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Bob Leaver",
+          "userPrincipalName": "bob@contoso.example",
+          "accountEnabled": false
+        }
+      ],
+      "owners": [],
+      "appRoleAssignments": [
+        {
+          "id": "ara-a3",
+          "principalId": "a3",
+          "principalType": null,
+          "principalDisplayName": null,
+          "resourceId": "sp-spo",
+          "resourceDisplayName": "Office 365 SharePoint Online",
+          "appRoleId": "r-spofull",
+          "createdDateTime": null
+        }
+      ],
+      "oauth2PermissionGrants": [],
+      "inheritedAppRoleAssignments": [],
+      "inheritedOauth2PermissionGrants": []
+    },
+    {
+      "id": "a4",
+      "appId": "a4-app",
+      "displayName": "<script>alert(1)</script> Orphan Agent",
+      "agentIdentityBlueprintId": "gone-app",
+      "accountEnabled": true,
+      "createdDateTime": "2026-08-01T00:00:00Z",
+      "createdByAppId": null,
+      "disabledByMicrosoftStatus": "DisabledDueToViolationOfServicesAgreement",
+      "servicePrincipalType": "ServiceIdentity",
+      "tags": [],
+      "passwordCredentials": [],
+      "keyCredentials": [],
+      "sponsors": [
+        {
+          "id": "user-alice",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Alice Admin",
+          "userPrincipalName": "alice@contoso.example",
+          "accountEnabled": true
+        }
+      ],
+      "owners": [],
+      "appRoleAssignments": [],
+      "oauth2PermissionGrants": [],
+      "inheritedAppRoleAssignments": [],
+      "inheritedOauth2PermissionGrants": []
+    }
+  ],
+  "AgentUsers": [
+    {
+      "id": "u1",
+      "displayName": "Sales Agent User",
+      "userPrincipalName": "salesagent@contoso.example",
+      "accountEnabled": true,
+      "createdDateTime": "2026-01-15T00:00:00Z",
+      "identityParentId": "a1",
+      "sponsors": []
+    },
+    {
+      "id": "u2",
+      "displayName": "Ghost Agent User",
+      "userPrincipalName": "ghost@contoso.example",
+      "accountEnabled": true,
+      "createdDateTime": "2026-03-01T00:00:00Z",
+      "identityParentId": "missing-agent",
+      "sponsors": [
+        {
+          "id": "user-alice",
+          "odataType": "#microsoft.graph.user",
+          "displayName": "Alice Admin",
+          "userPrincipalName": "alice@contoso.example",
+          "accountEnabled": true
+        }
+      ]
+    }
+  ],
+  "DirectoryRoleAssignments": [
+    {
+      "id": "ra1",
+      "principalId": "a1",
+      "roleDefinitionId": "rd-ga",
+      "roleName": "Global Administrator",
+      "roleTemplateId": "62e90394-69f5-4237-9190-012177145e10",
+      "isPrivileged": true,
+      "isBuiltIn": true,
+      "directoryScopeId": "/"
+    },
+    {
+      "id": "ra3",
+      "principalId": "u2",
+      "roleDefinitionId": "rd-rr",
+      "roleName": "Reports Reader",
+      "roleTemplateId": "4a5d8f65-41da-4de4-8968-e035b65339cf",
+      "isPrivileged": false,
+      "isBuiltIn": true,
+      "directoryScopeId": "/"
+    }
+  ],
+  "Resources": [
+    {
+      "id": "sp-graph",
+      "appId": "00000003-0000-0000-c000-000000000000",
+      "displayName": "Microsoft Graph",
+      "appRoles": [
+        {
+          "id": "r-mailsend",
+          "value": "Mail.Send"
+        },
+        {
+          "id": "r-dirrw",
+          "value": "Directory.ReadWrite.All"
+        },
+        {
+          "id": "r-userreadall",
+          "value": "User.Read.All"
+        }
+      ]
+    },
+    {
+      "id": "sp-spo",
+      "appId": "00000003-0000-0ff1-ce00-000000000000",
+      "displayName": "Office 365 SharePoint Online",
+      "appRoles": [
+        {
+          "id": "r-spofull",
+          "value": "Sites.FullControl.All"
+        }
+      ]
+    }
+  ],
+  "SignInActivity": [
+    {
+      "appId": "a1-app",
+      "lastSignInDateTime": "2026-03-01T00:00:00Z"
+    },
+    {
+      "appId": "a2-app",
+      "lastSignInDateTime": "2026-09-10T00:00:00Z"
+    },
+    {
+      "appId": "a3-app",
+      "lastSignInDateTime": null
+    },
+    {
+      "appId": "a4-app",
+      "lastSignInDateTime": "2026-09-15T00:00:00Z"
+    }
+  ],
+  "RiskyAgents": [
+    {
+      "id": "a1",
+      "agentDisplayName": "Sales Agent",
+      "identityType": "agentIdentity",
+      "blueprintId": null,
+      "riskLevel": "high",
+      "riskState": "atRisk",
+      "riskDetail": "none",
+      "riskLastModifiedDateTime": "2026-09-01T00:00:00Z",
+      "isEnabled": true,
+      "isDeleted": false
+    },
+    {
+      "id": "a2",
+      "agentDisplayName": "HR Agent",
+      "identityType": "agentIdentity",
+      "blueprintId": null,
+      "riskLevel": "none",
+      "riskState": "dismissed",
+      "riskDetail": "adminDismissedAllRiskForAgent",
+      "riskLastModifiedDateTime": "2026-08-01T00:00:00Z",
+      "isEnabled": true,
+      "isDeleted": false
+    }
+  ]
+}
