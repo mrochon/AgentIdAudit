@@ -4,7 +4,7 @@
     GUID                 = '06a01476-dc25-4b24-8096-bf15dd2f5b9c'
     Author               = 'mrochon'
     Copyright            = '(c) 2026 MariusR. MIT License.'
-    Description          = 'Read-only security audit of Microsoft Entra Agent ID: blueprint credentials, effective (direct and inherited) agent permissions, blocked and sensitive grants, directory roles, sponsors, stale and risky agents. Produces a findings list and a self-contained HTML report; snapshots contain no secrets and can be analyzed offline.'
+    Description          = 'Read-only security audit of Microsoft Entra Agent ID: blueprint credentials, effective (direct and inherited) agent permissions, blocked and sensitive grants, directory roles, sponsors, stale and risky agents. Produces a findings list and a self-contained HTML report; snapshots contain no secrets and can be analyzed offline. Source code: https://github.com/mrochon/AgentIdAudit.'
     PowerShellVersion    = '7.2'
     CompatiblePSEditions = @('Core')
     FunctionsToExport    = @(
