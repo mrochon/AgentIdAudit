@@ -5,3 +5,4 @@ agentid-report-*.html
 audit/
 *.local.json
 agent-audit/
+publish.ps1
