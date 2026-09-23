@@ -23,6 +23,12 @@ function Get-AgentIdInventory {
     .PARAMETER SkipRisk
     Don't read Identity Protection risky agents (needs IdentityRiskyAgent.Read.All).
 
+    .PARAMETER IncludeSecurityAttributes
+    Also read each agent identity's custom security attributes, so that AID-GOV-008 and AID-GOV-009 can check
+    them. Needs CustomSecAttributeAssignment.Read.All and the Attribute Assignment Reader role (Connect-AgentIdAudit
+    -IncludeSecurityAttributes requests the permission). Only the names of attributes that have a value are stored,
+    not the values.
+
     .EXAMPLE
     Connect-AgentIdAudit
     $snapshot = Get-AgentIdInventory
@@ -33,7 +39,8 @@ function Get-AgentIdInventory {
     param(
         [ValidateSet('beta', 'v1.0')][string]$GraphVersion = 'beta',
         [switch]$SkipSignInActivity,
-        [switch]$SkipRisk
+        [switch]$SkipRisk,
+        [switch]$IncludeSecurityAttributes
     )
 
     Test-AgentIdConnection
@@ -129,6 +136,7 @@ function Get-AgentIdInventory {
     }
     if ($r.Ok) {
         Initialize-AgentIdCoverage $cov $agentKeys
+        if ($IncludeSecurityAttributes) { Initialize-AgentIdCoverage $cov 'AgentSecurityAttributes' }
         $i = 0
         $agents = @(foreach ($raw in $r.Value) {
                 $i++
@@ -150,6 +158,16 @@ function Get-AgentIdInventory {
                 $grt = Invoke-AgentIdStep $cov 'AgentGrants' { Invoke-AgentIdGraphRequest -All -Uri "servicePrincipals/$id/oauth2PermissionGrants" }
                 $iar = Invoke-AgentIdStep $cov 'AgentInheritedGrants' { Invoke-AgentIdGraphRequest -All -Uri "servicePrincipals/microsoft.graph.agentIdentity/$id/inheritedAppRoleAssignments" }
                 $igr = Invoke-AgentIdStep $cov 'AgentInheritedGrants' { Invoke-AgentIdGraphRequest -All -Uri "servicePrincipals/microsoft.graph.agentIdentity/$id/inheritedOauth2PermissionGrants" }
+                # customSecurityAttributes is only returned when selected. A response without the property is
+                # treated as a failure, not as "no attributes", so a silent omission can't produce false findings.
+                $csa = $null
+                if ($IncludeSecurityAttributes) {
+                    $csa = Invoke-AgentIdStep $cov 'AgentSecurityAttributes' {
+                        $response = Invoke-AgentIdGraphRequest -Uri "servicePrincipals/$($id)?`$select=id,customSecurityAttributes"
+                        if (-not (Test-AgentIdProperty $response 'customSecurityAttributes')) { throw 'The response did not include customSecurityAttributes.' }
+                        $response
+                    }
+                }
                 # appId is inherited from servicePrincipal; some responses have also carried 'agentAppId'.
                 $appId = if ($raw.appId) { $raw.appId } else { $raw.agentAppId }
                 [ordered]@{
@@ -167,6 +185,7 @@ function Get-AgentIdInventory {
                     keyCredentials                  = if (Test-AgentIdProperty $raw 'keyCredentials') { ,@(ConvertTo-AgentIdCredential $raw.keyCredentials -Kind Certificate) } else { $null }
                     sponsors                        = $sponsors
                     owners                          = if ($own.Ok) { ,@(ConvertTo-AgentIdDirectoryObjectRef $own.Value) } else { $null }
+                    securityAttributes              = if ($csa -and $csa.Ok) { ,@(ConvertTo-AgentIdSecurityAttributeName $csa.Value[0].customSecurityAttributes) } else { $null }
                     appRoleAssignments              = if ($ara.Ok) { ,@(ConvertTo-AgentIdAppRoleAssignment $ara.Value) } else { $null }
                     oauth2PermissionGrants          = if ($grt.Ok) { ,@(ConvertTo-AgentIdPermissionGrant $grt.Value) } else { $null }
                     inheritedAppRoleAssignments     = if ($iar.Ok) { ,@(ConvertTo-AgentIdAppRoleAssignment $iar.Value) } else { $null }
@@ -175,6 +194,7 @@ function Get-AgentIdInventory {
             })
     } else {
         foreach ($k in $agentKeys) { Add-AgentIdCoverage $cov $k Skipped 'Agent identities could not be read.' }
+        if ($IncludeSecurityAttributes) { Add-AgentIdCoverage $cov 'AgentSecurityAttributes' Skipped 'Agent identities could not be read.' }
     }
 
     # ---------------------------------------------------------------- Agent users

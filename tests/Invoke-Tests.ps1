@@ -111,6 +111,69 @@ try {
     $lenient = @($snap | Get-AgentIdFinding -AsOf $asOf -MaxCredentialLifetimeDays 200 -RuleId 'AID-CRED-002')
     Assert ($lenient.Count -eq 1 -and $lenient[0].Detail -notmatch 'CN=sales') '-MaxCredentialLifetimeDays changes the threshold'
 
+    Section 'Custom security attributes: opt-in collection'
+    Assert (-not ($snap.Coverage.PSObject.Properties.Name -contains 'AgentSecurityAttributes')) 'security attributes are not collected unless requested'
+    Assert (-not ($fake.Calls | Where-Object { $_ -like '*customSecurityAttributes*' })) 'no security attribute requests unless requested'
+    $null = $snap | Get-AgentIdFinding -AsOf $asOf -RequiredSecurityAttribute 'Engineering.CostCenter' -WarningVariable notCollected -WarningAction SilentlyContinue
+    Assert (@($notCollected | Where-Object { $_.Message -match '^AID-GOV-008 .*AgentSecurityAttributes NotCollected' }).Count -eq 1) "a configured rule on a snapshot without the data is reported as not evaluated (got: $($notCollected -join ' / '))"
+
+    $fake = New-FakeGraphHandler (New-FakeTenant -Scenario A)
+    Set-FakeGraph $fake.Handler
+    $snapAttr = Get-AgentIdInventory -IncludeSecurityAttributes
+    Assert ($snapAttr.Coverage.AgentSecurityAttributes.Status -eq 'Ok') "AgentSecurityAttributes coverage Ok (got $($snapAttr.Coverage.AgentSecurityAttributes.Status))"
+    Assert (@($fake.Calls | Where-Object { $_ -like '*customSecurityAttributes*' }).Count -eq 4) 'one attribute request per agent identity'
+    Assert (@($fake.Unrouted).Count -eq 0) "no requests to unknown routes (got: $($fake.Unrouted -join '; '))"
+    $names = { param($id) (($snapAttr.AgentIdentities | Where-Object id -EQ $id).securityAttributes | Sort-Object) -join ',' }
+    Assert ((& $names 'a1') -eq 'Engineering.CostCenter,Engineering.Project') "a1 attribute names (got $(& $names 'a1'))"
+    Assert ((& $names 'a4') -eq 'Engineering.CostCenter,Finance.Region') "a4: empty value and annotations are not attributes (got $(& $names 'a4'))"
+    $a3Attr = ($snapAttr.AgentIdentities | Where-Object id -EQ 'a3').securityAttributes
+    Assert ($null -ne $a3Attr -and @($a3Attr).Count -eq 0) 'an agent with no attributes has an empty list, not $null'
+    Assert (($snapAttr | ConvertTo-Json -Depth 32) -notmatch 'Baker|Cascade|EMEA|Internal') 'attribute values are not stored'
+    $unit = InModule { param($j) ConvertTo-AgentIdSecurityAttributeName ($j | ConvertFrom-Json) } @('{"S":{"@odata.type":"x","A@odata.type":"#Collection(String)","A":[],"B":"  ","C":false,"D":0,"E":["x"],"F":null}}')
+    Assert ((@($unit) -join ',') -eq 'S.C,S.D,S.E') "empty collection, blank string and null are not values; false and 0 are (got $(@($unit) -join ','))"
+
+    Section 'Custom security attributes: rules'
+    $required = 'Engineering.CostCenter', 'Engineering.Project'
+    $optional = 'Engineering.DataClass'
+    $attrFindings = @($snapAttr | Get-AgentIdFinding -AsOf $asOf -RuleId 'AID-GOV-00[89]' -RequiredSecurityAttribute $required -OptionalSecurityAttribute $optional -WarningVariable attrWarnings -WarningAction SilentlyContinue)
+    $attrActual = @($attrFindings | ForEach-Object { "$($_.RuleId) $($_.ObjectId)" } | Sort-Object)
+    $attrExpected = @('AID-GOV-008 a3', 'AID-GOV-008 a4', 'AID-GOV-009 a1', 'AID-GOV-009 a3', 'AID-GOV-009 a4')
+    Assert (($attrActual -join ',') -eq ($attrExpected -join ',')) "required and optional findings (got $($attrActual -join ', '))"
+    Assert (@($attrWarnings).Count -eq 0) 'no warnings when the data was collected'
+    $req3 = $attrFindings | Where-Object { $_.RuleId -eq 'AID-GOV-008' -and $_.ObjectId -eq 'a3' }
+    $req4 = $attrFindings | Where-Object { $_.RuleId -eq 'AID-GOV-008' -and $_.ObjectId -eq 'a4' }
+    Assert ($req3.Severity -eq 'Medium' -and $req3.Detail -match 'Engineering\.CostCenter, Engineering\.Project') 'a3 lacks both required attributes'
+    Assert ($req4.Detail -match 'Engineering\.Project' -and $req4.Detail -notmatch 'CostCenter') 'a4 lacks only Project (empty string is not a value)'
+    Assert (($attrFindings | Where-Object RuleId -EQ 'AID-GOV-009' | Select-Object -First 1).Severity -eq 'Info') 'optional attribute findings are Info'
+    Assert (-not ($attrFindings | Where-Object ObjectId -EQ 'a2')) 'an agent with every attribute produces no findings'
+    $none = @($snapAttr | Get-AgentIdFinding -AsOf $asOf -RuleId 'AID-GOV-00[89]' -WarningVariable noneWarn -WarningAction SilentlyContinue)
+    Assert ($none.Count -eq 0 -and @($noneWarn).Count -eq 0) 'without attribute names the rules do nothing and do not warn'
+    $reqOnly = @($snapAttr | Get-AgentIdFinding -AsOf $asOf -RuleId 'AID-GOV-00[89]' -RequiredSecurityAttribute $required)
+    Assert (-not ($reqOnly | Where-Object RuleId -EQ 'AID-GOV-009')) 'no optional findings when no optional attributes are named'
+    $cased = @($snapAttr | Get-AgentIdFinding -AsOf $asOf -RuleId 'AID-GOV-008' -RequiredSecurityAttribute 'engineering.COSTCENTER')
+    Assert (($cased.ObjectId -join ',') -eq 'a3') "attribute names are matched case-insensitively (got $($cased.ObjectId -join ','))"
+    $both = @($snapAttr | Get-AgentIdFinding -AsOf $asOf -RuleId 'AID-GOV-00[89]' -RequiredSecurityAttribute 'Engineering.Project' -OptionalSecurityAttribute 'Engineering.Project', 'Engineering.DataClass')
+    Assert (-not ($both | Where-Object { $_.RuleId -eq 'AID-GOV-009' -and $_.Detail -match 'Project' })) 'an attribute in both lists is treated as required'
+    $threw = $false; try { $snapAttr | Get-AgentIdFinding -RequiredSecurityAttribute 'NoDot' | Out-Null } catch { $threw = $_.Exception.Message -match 'AttributeSet\.AttributeName' }
+    Assert $threw 'attribute names must be AttributeSet.AttributeName'
+
+    Section 'Custom security attributes: partial and denied'
+    $routes = New-FakeTenant -Scenario A
+    $routes['servicePrincipals/a1?$select=id,customSecurityAttributes'] = ConvertTo-FakeGraphObject @{ id = 'a1' }
+    Set-FakeGraph (New-FakeGraphHandler $routes).Handler
+    $snapP = Get-AgentIdInventory -IncludeSecurityAttributes
+    Assert ($snapP.Coverage.AgentSecurityAttributes.Status -eq 'Partial') "a response without the property makes coverage Partial (got $($snapP.Coverage.AgentSecurityAttributes.Status))"
+    Assert ($null -eq ($snapP.AgentIdentities | Where-Object id -EQ 'a1').securityAttributes) 'unreadable attributes stored as unknown ($null), never as empty'
+    $partial = @($snapP | Get-AgentIdFinding -AsOf $asOf -RuleId 'AID-GOV-008' -RequiredSecurityAttribute $required)
+    Assert ((($partial.ObjectId | Sort-Object) -join ',') -eq 'a3,a4') "agent with unknown attributes is skipped, not reported (got $($partial.ObjectId -join ','))"
+
+    Set-FakeGraph (New-FakeGraphHandler (New-FakeTenant -Scenario B)).Handler
+    $snapD = Get-AgentIdInventory -IncludeSecurityAttributes
+    Assert ($snapD.Coverage.AgentSecurityAttributes.Status -eq 'Denied') "AgentSecurityAttributes Denied (got $($snapD.Coverage.AgentSecurityAttributes.Status))"
+    $denied = @($snapD | Get-AgentIdFinding -AsOf $asOf -RequiredSecurityAttribute $required -WarningVariable deniedWarn -WarningAction SilentlyContinue | Where-Object RuleId -EQ 'AID-GOV-008')
+    Assert ($denied.Count -eq 0) 'no missing-attribute findings from data that could not be read'
+    Assert (@($deniedWarn | Where-Object { $_.Message -match '^AID-GOV-008 .*AgentSecurityAttributes Denied' }).Count -eq 1) 'rule reported as not evaluated with the reason'
+
     Section 'Snapshot export and import'
     $file = Export-AgentIdSnapshot -Snapshot $snap -Path (Join-Path $out 'snap.json')
     $reloaded = Import-AgentIdSnapshot $file.FullName
@@ -175,6 +238,9 @@ try {
     $csv = @(Import-Csv $summary.Findings)
     Assert ($csv.Count -eq ($summary.Critical + $summary.High + $summary.Medium + $summary.Low + $summary.Info)) 'CSV row count matches the summary'
     Assert ($summary.AgentIdentities -eq 4 -and $summary.Blueprints -eq 3) 'summary counts'
+    $summaryAttr = Invoke-AgentIdAudit -OutputPath (Join-Path $out 'audit-attr') -RequiredSecurityAttribute 'Engineering.CostCenter', 'Engineering.Project' -WarningAction SilentlyContinue
+    $csvAttr = @(Import-Csv $summaryAttr.Findings | Where-Object RuleId -EQ 'AID-GOV-008')
+    Assert ($csvAttr.Count -eq 2) "naming required attributes collects them and reports findings (got $($csvAttr.Count))"
 
     # ------------------------------------------------------------------------------------------------ units
     Section 'Error classification'
@@ -193,7 +259,7 @@ try {
 
     Section 'Rules and manifest'
     $rules = @(Get-AgentIdRule)
-    Assert ($rules.Count -eq 23) "23 rules (got $($rules.Count))"
+    Assert ($rules.Count -eq 25) "25 rules (got $($rules.Count))"
     Assert (-not ($rules | Where-Object { $_.Reference -notmatch '^https://learn\.microsoft\.com/' })) 'every rule references Microsoft documentation'
     $manifest = Test-ModuleManifest (Join-Path $root 'src\AgentIdAudit\AgentIdAudit.psd1')
     $exported = @($manifest.ExportedFunctions.Keys | Sort-Object)

@@ -20,6 +20,11 @@ function Connect-AgentIdAudit {
     Request only the core scopes. Sign-in activity (AuditLog.Read.All) and Identity Protection
     (IdentityRiskyAgent.Read.All) checks will then be reported as not evaluated.
 
+    .PARAMETER IncludeSecurityAttributes
+    Also request CustomSecAttributeAssignment.Read.All, needed to read agents' custom security attributes
+    (Get-AgentIdInventory -IncludeSecurityAttributes). The signed-in account must also hold the Attribute
+    Assignment Reader role.
+
     .EXAMPLE
     Connect-AgentIdAudit -TenantId contoso.onmicrosoft.com
     #>
@@ -27,7 +32,8 @@ function Connect-AgentIdAudit {
     param(
         [string]$TenantId,
         [switch]$UseDeviceCode,
-        [switch]$SkipOptionalScopes
+        [switch]$SkipOptionalScopes,
+        [switch]$IncludeSecurityAttributes
     )
 
     if (-not (Get-Command Connect-MgGraph -ErrorAction SilentlyContinue)) {
@@ -35,6 +41,7 @@ function Connect-AgentIdAudit {
     }
     $scopes = @($script:AgentIdCoreScopes)
     if (-not $SkipOptionalScopes) { $scopes += $script:AgentIdOptionalScopes }
+    if ($IncludeSecurityAttributes) { $scopes += $script:AgentIdSecurityAttributeScope }
 
     $params = @{ Scopes = $scopes; NoWelcome = $true; ErrorAction = 'Stop' }
     if ($TenantId) { $params.TenantId = $TenantId }

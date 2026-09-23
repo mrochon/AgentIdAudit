@@ -4,7 +4,7 @@
 #
 # Scenarios:
 #   A - everything readable; $expand=sponsors unsupported (400), so sponsors are read per agent
-#   B - sponsors and Identity Protection denied (403); the agent list must still be collected
+#   B - sponsors, Identity Protection and custom security attributes denied (403); the agent list must still be collected
 #   C - $expand=sponsors supported, so no per-agent sponsor calls should be made
 
 $script:GraphAppId = '00000003-0000-0000-c000-000000000000'
@@ -133,6 +133,21 @@ function New-FakeTenant {
         $r["servicePrincipals/microsoft.graph.agentIdentity/$id/inheritedAppRoleAssignments"] = $none
         $r["servicePrincipals/microsoft.graph.agentIdentity/$id/inheritedOauth2PermissionGrants"] = $none
     }
+    # Custom security attributes (only requested with -IncludeSecurityAttributes). Attribute names are
+    # Engineering.CostCenter, Engineering.Project and Engineering.DataClass.
+    #   a1: CostCenter + Project (annotation keys present, as Graph returns them)   a2: all three
+    #   a3: no attributes at all (null)   a4: CostCenter only - Project is an empty string, plus an unrelated set
+    $csaType = '#Microsoft.DirectoryServices.CustomSecurityAttributeValue'
+    $csa = @{
+        a1 = @{ Engineering = @{ '@odata.type' = $csaType; 'Project@odata.type' = '#Collection(String)'; Project = @('Baker'); CostCenter = 1001 } }
+        a2 = @{ Engineering = @{ '@odata.type' = $csaType; Project = @('Cascade'); CostCenter = 1002; DataClass = 'Internal' } }
+        a3 = $null
+        a4 = @{ Engineering = @{ '@odata.type' = $csaType; Project = ''; CostCenter = 1003 }; Finance = @{ '@odata.type' = $csaType; Region = 'EMEA' } }
+    }
+    foreach ($a in $agents) {
+        $r["servicePrincipals/$($a.id)?`$select=id,customSecurityAttributes"] = if ($Scenario -eq 'B') { 403 } else { @{ id = $a.id; customSecurityAttributes = $csa[$a.id] } }
+    }
+
     # a1: blocked Directory.ReadWrite.All (direct), Mail.Read + User.Read for all users, Mail.Send inherited from bpp1
     $r['servicePrincipals/a1/appRoleAssignments'] = & $page @(@{ id = 'ara-a1'; principalId = 'a1'; principalType = 'ServicePrincipal'; resourceId = 'sp-graph'; resourceDisplayName = 'Microsoft Graph'; appRoleId = 'r-dirrw' })
     $r['servicePrincipals/a1/oauth2PermissionGrants'] = & $page @(@{ id = 'g-a1'; clientId = 'a1'; consentType = 'AllPrincipals'; principalId = $null; resourceId = 'sp-graph'; scope = 'Mail.Read User.Read' })

@@ -80,6 +80,25 @@ function ConvertTo-AgentIdDirectoryObjectRef {
     }
 }
 
+function ConvertTo-AgentIdSecurityAttributeName {
+    # Reduces a customSecurityAttributes value ({ Set = { Attribute = value } }) to the 'Set.Attribute' names that
+    # hold a value. The values themselves are not kept: the audit only needs to know that one is defined.
+    param($InputObject)
+    if ($null -eq $InputObject) { return }
+    foreach ($set in $InputObject.PSObject.Properties) {
+        if ($set.Name -like '*@*' -or $set.Value -isnot [pscustomobject]) { continue }
+        foreach ($attribute in $set.Value.PSObject.Properties) {
+            if ($attribute.Name -like '*@*') { continue }   # OData annotations such as 'Project@odata.type'
+            $v = $attribute.Value
+            $hasValue = if ($null -eq $v) { $false }
+            elseif ($v -is [string]) { $v.Trim() -ne '' }
+            elseif ($v -is [System.Collections.IEnumerable]) { @($v).Count -gt 0 }
+            else { $true }
+            if ($hasValue) { "$($set.Name).$($attribute.Name)" }
+        }
+    }
+}
+
 function ConvertTo-AgentIdAppRoleAssignment {
     param($InputObject)
     foreach ($a in @($InputObject)) {

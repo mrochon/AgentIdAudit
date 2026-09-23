@@ -5,7 +5,7 @@
   "GraphVersion": "beta",
   "TenantId": "tenant-1",
   "TenantName": "Contoso (sample data)",
-  "CollectedAt": "2026-09-18T22:33:17.0084243Z",
+  "CollectedAt": "2026-09-23T17:21:22.039382Z",
   "Coverage": {
     "Tenant": {
       "Status": "Ok",
@@ -350,6 +350,7 @@
       "keyCredentials": [],
       "sponsors": [],
       "owners": [],
+      "securityAttributes": null,
       "appRoleAssignments": [
         {
           "id": "ara-a1",
@@ -409,6 +410,7 @@
         }
       ],
       "owners": [],
+      "securityAttributes": null,
       "appRoleAssignments": [
         {
           "id": "ara-a2",
@@ -467,6 +469,7 @@
         }
       ],
       "owners": [],
+      "securityAttributes": null,
       "appRoleAssignments": [
         {
           "id": "ara-a3",
@@ -506,6 +509,7 @@
         }
       ],
       "owners": [],
+      "securityAttributes": null,
       "appRoleAssignments": [],
       "oauth2PermissionGrants": [],
       "inheritedAppRoleAssignments": [],

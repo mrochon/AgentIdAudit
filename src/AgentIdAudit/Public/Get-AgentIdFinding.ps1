@@ -19,8 +19,20 @@ function Get-AgentIdFinding {
     .PARAMETER ExcludeRuleId
     Skip these rules. Wildcards are allowed.
 
+    .PARAMETER RequiredSecurityAttribute
+    Custom security attributes, as AttributeSet.AttributeName, that every agent identity must have a value for
+    (AID-GOV-008). The snapshot must have been collected with Get-AgentIdInventory -IncludeSecurityAttributes.
+    The rule is not run when this is omitted.
+
+    .PARAMETER OptionalSecurityAttribute
+    Custom security attributes an agent identity should have a value for if they apply (AID-GOV-009, Info).
+    An attribute named in both lists is treated as required.
+
     .EXAMPLE
     Get-AgentIdInventory | Get-AgentIdFinding -MinimumSeverity High | Format-Table Severity, Title, ObjectName
+
+    .EXAMPLE
+    Get-AgentIdInventory -IncludeSecurityAttributes | Get-AgentIdFinding -RuleId 'AID-GOV-00[89]' -RequiredSecurityAttribute Engineering.CostCenter, Engineering.Owner -OptionalSecurityAttribute Engineering.DataClass
 
     .EXAMPLE
     Import-AgentIdSnapshot .\contoso.json | Get-AgentIdFinding -RuleId 'AID-PERM-*' | Export-Csv .\perm.csv
@@ -35,10 +47,13 @@ function Get-AgentIdFinding {
         [datetimeoffset]$AsOf,
         [ValidateRange(1, 36500)][int]$MaxCredentialLifetimeDays = 180,
         [ValidateRange(1, 3650)][int]$StaleAfterDays = 90,
-        [ValidateRange(1, 365)][int]$ExpiringWithinDays = 30
+        [ValidateRange(1, 365)][int]$ExpiringWithinDays = 30,
+        [ValidatePattern('^\w+\.\w+$', ErrorMessage = 'Use the form AttributeSet.AttributeName, for example Engineering.CostCenter.')][string[]]$RequiredSecurityAttribute,
+        [ValidatePattern('^\w+\.\w+$', ErrorMessage = 'Use the form AttributeSet.AttributeName, for example Engineering.CostCenter.')][string[]]$OptionalSecurityAttribute
     )
     process {
-        $options = New-AgentIdOptions -MaxCredentialLifetimeDays $MaxCredentialLifetimeDays -StaleAfterDays $StaleAfterDays -ExpiringWithinDays $ExpiringWithinDays
+        $options = New-AgentIdOptions -MaxCredentialLifetimeDays $MaxCredentialLifetimeDays -StaleAfterDays $StaleAfterDays -ExpiringWithinDays $ExpiringWithinDays `
+            -RequiredSecurityAttribute $RequiredSecurityAttribute -OptionalSecurityAttribute $OptionalSecurityAttribute
         $params = @{ Snapshot = $Snapshot; Options = $options; IncludeRuleId = $RuleId; ExcludeRuleId = $ExcludeRuleId }
         if ($PSBoundParameters.ContainsKey('AsOf')) { $params.AsOf = $AsOf }
         $result = Invoke-AgentIdRuleEvaluation @params

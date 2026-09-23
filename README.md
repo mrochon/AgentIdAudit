@@ -7,7 +7,11 @@ Install-Module AgentIdAudit -AllowPrerelease -Scope CurrentUser
 Invoke-AgentIdAudit -OutputPath .\agent-audit
 ```
 
-Or from a clone of this repository: `Import-Module ./src/AgentIdAudit`.
+Or from a clone of this repository: 
+
+```PowerShell
+Import-Module ./src/AgentIdAudit
+```
 
 To see what a report looks like without running anything, open [samples/sample-report.html](samples/sample-report.html), generated from sample data.
 
@@ -42,6 +46,8 @@ Agent identities don't fit the checks written for users or ordinary applications
 | AID-GOV-005 | Low | Other applications can create agents from this blueprint |
 | AID-GOV-006 | Info | Blueprint is available to other tenants |
 | AID-GOV-007 | High | Microsoft has disabled this object |
+| AID-GOV-008 | Medium | Agent identity is missing required custom security attributes *(opt-in)* |
+| AID-GOV-009 | Info | Agent identity is missing optional custom security attributes *(opt-in)* |
 | AID-USER-001 | Medium | Agent user has no sponsor |
 | AID-USER-002 | Medium | Agent user's parent agent identity not found |
 | AID-LIFE-001 | Medium | Agent identity has not signed in recently |
@@ -72,6 +78,7 @@ Agent identities don't fit the checks written for users or ordinary applications
 | RoleManagement.Read.Directory | Directory role assignments |
 | AuditLog.Read.All *(optional)* | Sign-in activity (also needs Microsoft Entra ID P1 or P2) |
 | IdentityRiskyAgent.Read.All *(optional)* | Identity Protection risk |
+| CustomSecAttributeAssignment.Read.All *(opt-in, `-IncludeSecurityAttributes`)* | Custom security attributes on agent identities (the signed-in account also needs the Attribute Assignment Reader role) |
 
 Use `-SkipOptionalScopes` to request only the first six. To run app-only (for example, from automation), connect with `Connect-MgGraph` and a certificate yourself — the other commands use whichever Graph connection is current.
 
@@ -91,6 +98,22 @@ Use `-SkipOptionalScopes` to request only the first six. To run app-only (for ex
 | `Get-AgentIdRule` | List the rules |
 
 Thresholds are adjustable: `-MaxCredentialLifetimeDays` (default 180), `-StaleAfterDays` (90), `-ExpiringWithinDays` (30).
+
+### Requiring custom security attributes
+
+AID-GOV-008 and AID-GOV-009 check that every agent identity has a value for the custom security attributes you name, written as `AttributeSet.AttributeName`. They are off until you name attributes, and the attributes must be collected, which needs the extra permission above:
+
+```PowerShell
+Invoke-AgentIdAudit `
+    -RequiredSecurityAttribute Engineering.CostCenter, Engineering.Owner `
+    -OptionalSecurityAttribute Engineering.DataClass
+```
+
+- **Required** attributes that an agent has no value for are reported at Medium (AID-GOV-008). **Optional** ones are reported at Info (AID-GOV-009); an attribute named in both lists counts as required.
+- A blank value, or an empty multi-value list, counts as no value. Names are matched case-insensitively.
+- Only the *names* of attributes that have a value are stored in the snapshot, never the values.
+- The lists are analysis options, so you can collect once with `Get-AgentIdInventory -IncludeSecurityAttributes` and try different lists later with `Get-AgentIdFinding` or `Export-AgentIdReport`.
+- If an agent's attributes can't be read (permission or role missing), that agent is not reported as missing them. When none can be read the checks are listed as not evaluated.
 
 ### Collect here, analyze elsewhere
 

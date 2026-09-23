@@ -1,7 +1,8 @@
 # Audit rules. Each rule declares the coverage keys it needs (Requires); if any of them wasn't collected, the
 # rule is reported as not evaluated rather than run on incomplete data. Severity is the rule's maximum; some
 # rules emit individual findings at a lower severity. Evaluate receives ($Ctx, $Rule) and writes findings
-# created with New-AgentIdFinding.
+# created with New-AgentIdFinding. A rule may also define Applies, a scriptblock taking $Ctx: when it returns
+# false the rule is skipped silently (used by rules that need configuration from the caller).
 
 $ref = @{
     BlueprintCredentials = 'https://learn.microsoft.com/en-us/entra/agent-id/identity-platform/create-blueprint?tabs=microsoft-graph-api#configure-credentials-for-the-agent-identity-blueprint'
@@ -14,6 +15,7 @@ $ref = @{
     Consent              = 'https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/manage-application-permissions'
     Blueprint            = 'https://learn.microsoft.com/en-us/graph/api/resources/agentidentityblueprint?view=graph-rest-beta'
     AgentUser            = 'https://learn.microsoft.com/en-us/graph/api/resources/agentuser?view=graph-rest-beta'
+    SecurityAttributes   = 'https://learn.microsoft.com/en-us/entra/fundamentals/custom-security-attributes-overview'
 }
 
 @(
@@ -408,6 +410,43 @@ $ref = @{
                     New-AgentIdFinding -Rule $Rule -ObjectType $set[0] -ObjectId $obj.id -ObjectName $obj.displayName `
                         -Detail ("disabledByMicrosoftStatus is {0}." -f $obj.disabledByMicrosoftStatus)
                 }
+            }
+        }
+    }
+
+    @{
+        # Applies only when the caller names attributes (-RequiredSecurityAttribute) and the snapshot was
+        # collected with -IncludeSecurityAttributes.
+        Id          = 'AID-GOV-008'
+        Severity    = 'Medium'
+        Category    = 'Governance'
+        Title       = 'Agent identity is missing required custom security attributes'
+        Requires    = @('AgentIdentities', 'AgentSecurityAttributes')
+        Reference   = $ref.SecurityAttributes
+        Remediation = 'Assign a value for each listed attribute to the agent identity (this needs the Attribute Assignment Administrator role), or take the attribute off the required list if it does not apply to agents.'
+        Applies     = { param($Ctx) @($Ctx.Options.RequiredSecurityAttribute).Count -gt 0 }
+        Evaluate    = {
+            param($Ctx, $Rule)
+            foreach ($row in @(Get-AgentIdAgentMissingSecurityAttribute $Ctx $Ctx.Options.RequiredSecurityAttribute)) {
+                New-AgentIdFinding -Rule $Rule -ObjectType 'Agent identity' -ObjectId $row.Agent.id -ObjectName $row.Agent.displayName `
+                    -Detail ('No value for required custom security attribute(s): {0}.' -f ($row.Missing -join ', '))
+            }
+        }
+    }
+    @{
+        Id          = 'AID-GOV-009'
+        Severity    = 'Info'
+        Category    = 'Governance'
+        Title       = 'Agent identity is missing optional custom security attributes'
+        Requires    = @('AgentIdentities', 'AgentSecurityAttributes')
+        Reference   = $ref.SecurityAttributes
+        Remediation = 'Assign a value for each listed attribute if it applies to this agent. Optional attributes are advisory; take one off the list if it is rarely used.'
+        Applies     = { param($Ctx) @($Ctx.Options.OptionalSecurityAttribute).Count -gt 0 }
+        Evaluate    = {
+            param($Ctx, $Rule)
+            foreach ($row in @(Get-AgentIdAgentMissingSecurityAttribute $Ctx $Ctx.Options.OptionalSecurityAttribute)) {
+                New-AgentIdFinding -Rule $Rule -ObjectType 'Agent identity' -ObjectId $row.Agent.id -ObjectName $row.Agent.displayName `
+                    -Detail ('No value for optional custom security attribute(s): {0}.' -f ($row.Missing -join ', '))
             }
         }
     }

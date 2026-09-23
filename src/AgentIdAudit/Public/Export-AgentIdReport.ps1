@@ -22,10 +22,13 @@ function Export-AgentIdReport {
         [datetimeoffset]$AsOf,
         [ValidateRange(1, 36500)][int]$MaxCredentialLifetimeDays = 180,
         [ValidateRange(1, 3650)][int]$StaleAfterDays = 90,
-        [ValidateRange(1, 365)][int]$ExpiringWithinDays = 30
+        [ValidateRange(1, 365)][int]$ExpiringWithinDays = 30,
+        [ValidatePattern('^\w+\.\w+$', ErrorMessage = 'Use the form AttributeSet.AttributeName, for example Engineering.CostCenter.')][string[]]$RequiredSecurityAttribute,
+        [ValidatePattern('^\w+\.\w+$', ErrorMessage = 'Use the form AttributeSet.AttributeName, for example Engineering.CostCenter.')][string[]]$OptionalSecurityAttribute
     )
     process {
-        $options = New-AgentIdOptions -MaxCredentialLifetimeDays $MaxCredentialLifetimeDays -StaleAfterDays $StaleAfterDays -ExpiringWithinDays $ExpiringWithinDays
+        $options = New-AgentIdOptions -MaxCredentialLifetimeDays $MaxCredentialLifetimeDays -StaleAfterDays $StaleAfterDays -ExpiringWithinDays $ExpiringWithinDays `
+            -RequiredSecurityAttribute $RequiredSecurityAttribute -OptionalSecurityAttribute $OptionalSecurityAttribute
         $params = @{ Snapshot = $Snapshot; Options = $options }
         if ($PSBoundParameters.ContainsKey('AsOf')) { $params.AsOf = $AsOf }
         $evaluation = Invoke-AgentIdRuleEvaluation @params
@@ -51,8 +54,22 @@ function Invoke-AgentIdAudit {
       agentid-report-<date>.html     the human-readable report
     and returns a summary.
 
+    .PARAMETER RequiredSecurityAttribute
+    Custom security attributes (AttributeSet.AttributeName) every agent identity must have a value for. Naming
+    any implies -IncludeSecurityAttributes.
+
+    .PARAMETER OptionalSecurityAttribute
+    Custom security attributes an agent identity should have a value for if they apply (reported as Info).
+
+    .PARAMETER IncludeSecurityAttributes
+    Read agents' custom security attributes into the snapshot even when no attribute names are given, so they can
+    be checked later. Needs CustomSecAttributeAssignment.Read.All and the Attribute Assignment Reader role.
+
     .EXAMPLE
     Invoke-AgentIdAudit -TenantId contoso.onmicrosoft.com -OutputPath .\audit
+
+    .EXAMPLE
+    Invoke-AgentIdAudit -RequiredSecurityAttribute Engineering.CostCenter, Engineering.Owner -OptionalSecurityAttribute Engineering.DataClass
     #>
     [CmdletBinding()]
     param(
@@ -61,15 +78,19 @@ function Invoke-AgentIdAudit {
         [switch]$UseDeviceCode,
         [switch]$SkipSignInActivity,
         [switch]$SkipRisk,
+        [switch]$IncludeSecurityAttributes,
         [ValidateRange(1, 36500)][int]$MaxCredentialLifetimeDays = 180,
         [ValidateRange(1, 3650)][int]$StaleAfterDays = 90,
-        [ValidateRange(1, 365)][int]$ExpiringWithinDays = 30
+        [ValidateRange(1, 365)][int]$ExpiringWithinDays = 30,
+        [ValidatePattern('^\w+\.\w+$', ErrorMessage = 'Use the form AttributeSet.AttributeName, for example Engineering.CostCenter.')][string[]]$RequiredSecurityAttribute,
+        [ValidatePattern('^\w+\.\w+$', ErrorMessage = 'Use the form AttributeSet.AttributeName, for example Engineering.CostCenter.')][string[]]$OptionalSecurityAttribute
     )
 
+    $collectAttributes = $IncludeSecurityAttributes -or $RequiredSecurityAttribute -or $OptionalSecurityAttribute
     if (-not $script:AgentIdGraphHandler) {
         $connected = (Get-Command Get-MgContext -ErrorAction SilentlyContinue) -and (Get-MgContext)
         if (-not $connected) {
-            $connect = @{ SkipOptionalScopes = ($SkipSignInActivity -and $SkipRisk) }
+            $connect = @{ SkipOptionalScopes = ($SkipSignInActivity -and $SkipRisk); IncludeSecurityAttributes = [bool]$collectAttributes }
             if ($TenantId) { $connect.TenantId = $TenantId }
             if ($UseDeviceCode) { $connect.UseDeviceCode = $true }
             Connect-AgentIdAudit @connect | Out-Null
@@ -80,10 +101,11 @@ function Invoke-AgentIdAudit {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
     $stamp = [datetime]::UtcNow.ToString('yyyyMMdd-HHmm')
 
-    $snapshot = Get-AgentIdInventory -SkipSignInActivity:$SkipSignInActivity -SkipRisk:$SkipRisk
+    $snapshot = Get-AgentIdInventory -SkipSignInActivity:$SkipSignInActivity -SkipRisk:$SkipRisk -IncludeSecurityAttributes:$collectAttributes
     $snapshotFile = Export-AgentIdSnapshot -Snapshot $snapshot -Path (Join-Path $dir "agentid-snapshot-$stamp.json")
 
-    $options = New-AgentIdOptions -MaxCredentialLifetimeDays $MaxCredentialLifetimeDays -StaleAfterDays $StaleAfterDays -ExpiringWithinDays $ExpiringWithinDays
+    $options = New-AgentIdOptions -MaxCredentialLifetimeDays $MaxCredentialLifetimeDays -StaleAfterDays $StaleAfterDays -ExpiringWithinDays $ExpiringWithinDays `
+        -RequiredSecurityAttribute $RequiredSecurityAttribute -OptionalSecurityAttribute $OptionalSecurityAttribute
     $evaluation = Invoke-AgentIdRuleEvaluation -Snapshot $snapshot -Options $options
     $findingsFile = Join-Path $dir "agentid-findings-$stamp.csv"
     $evaluation.Findings | Select-Object Severity, RuleId, Title, ObjectType, ObjectName, ObjectId, Detail, Remediation, Reference |

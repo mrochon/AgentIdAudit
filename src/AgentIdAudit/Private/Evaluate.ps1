@@ -176,6 +176,17 @@ function Format-AgentIdPermissionList {
     return (@($parts) | Sort-Object -Unique) -join ', '
 }
 
+function Get-AgentIdAgentMissingSecurityAttribute {
+    # For each agent identity, the given 'Set.Attribute' names it holds no value for. An agent whose attributes
+    # could not be read ($null) is skipped: unknown is not the same as missing.
+    param([Parameter(Mandatory)]$Ctx, [string[]]$Name)
+    foreach ($agent in @($Ctx.Snapshot.AgentIdentities)) {
+        if (-not $agent -or $null -eq $agent.securityAttributes) { continue }
+        $missing = @($Name | Where-Object { $_ -notin @($agent.securityAttributes) })
+        if ($missing) { [pscustomobject]@{ Agent = $agent; Missing = $missing } }
+    }
+}
+
 function Invoke-AgentIdRuleEvaluation {
     param(
         [Parameter(Mandatory)]$Snapshot,
@@ -195,6 +206,9 @@ function Invoke-AgentIdRuleEvaluation {
     foreach ($rule in $script:AgentIdRules) {
         if ($IncludeRuleId -and -not ($IncludeRuleId | Where-Object { $rule.Id -like $_ })) { continue }
         if ($ExcludeRuleId -and ($ExcludeRuleId | Where-Object { $rule.Id -like $_ })) { continue }
+        # A rule that needs configuration (e.g. a list of attribute names) is left out entirely, not reported as
+        # not evaluated, until it has been configured.
+        if ($rule.ContainsKey('Applies') -and -not (& $rule.Applies $ctx)) { continue }
 
         $blocking = foreach ($key in $rule.Requires) {
             $entry = $Snapshot.Coverage.$key

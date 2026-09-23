@@ -15,11 +15,18 @@ function New-AgentIdOptions {
     param(
         [int]$MaxCredentialLifetimeDays = 180,
         [int]$StaleAfterDays = 90,
-        [int]$ExpiringWithinDays = 30
+        [int]$ExpiringWithinDays = 30,
+        [string[]]$RequiredSecurityAttribute,
+        [string[]]$OptionalSecurityAttribute
     )
+    # An attribute named in both lists is required.
+    $required = @($RequiredSecurityAttribute | Where-Object { $_ } | Sort-Object -Unique)
+    $optional = @($OptionalSecurityAttribute | Where-Object { $_ -and $_ -notin $required } | Sort-Object -Unique)
     return @{
         MaxCredentialLifetimeDays = $MaxCredentialLifetimeDays
         StaleAfterDays            = $StaleAfterDays
         ExpiringWithinDays        = $ExpiringWithinDays
+        RequiredSecurityAttribute = $required
+        OptionalSecurityAttribute = $optional
     }
 }

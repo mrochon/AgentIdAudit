@@ -15,6 +15,8 @@ $script:AgentIdOptionalScopes = @(
     'AuditLog.Read.All'
     'IdentityRiskyAgent.Read.All'
 )
+# Requested only with -IncludeSecurityAttributes; reading attribute values also needs the Attribute Assignment Reader role.
+$script:AgentIdSecurityAttributeScope = 'CustomSecAttributeAssignment.Read.All'
 
 foreach ($folder in 'Private', 'Public') {
     foreach ($file in Get-ChildItem -Path (Join-Path $PSScriptRoot $folder) -Filter '*.ps1') {
@@ -40,6 +42,7 @@ foreach ($rule in $script:AgentIdRules) {
     }
     if ($rule.Severity -notin 'Critical', 'High', 'Medium', 'Low', 'Info') { throw "AgentIdAudit rule '$($rule.Id)' has invalid severity '$($rule.Severity)'." }
     if ($rule.Evaluate -isnot [scriptblock]) { throw "AgentIdAudit rule '$($rule.Id)': Evaluate must be a scriptblock." }
+    if ($rule.ContainsKey('Applies') -and $rule.Applies -isnot [scriptblock]) { throw "AgentIdAudit rule '$($rule.Id)': Applies must be a scriptblock." }
     if ($ruleIds.ContainsKey($rule.Id)) { throw "Duplicate AgentIdAudit rule id '$($rule.Id)'." }
     $ruleIds[$rule.Id] = $true
 }
